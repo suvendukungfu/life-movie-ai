@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { AIStoryProvider, AIStoryPromptInput } from "./types";
 import { StoryOutline, StoryChapter } from "@/lib/types/domain";
+import { getGeminiApiKey } from "@/lib/config/env";
 
 /**
  * Real Gemini AI Story Provider.
@@ -16,10 +17,7 @@ export class GeminiStoryProvider implements AIStoryProvider {
   name = "Gemini AI Storyteller";
 
   private getClient(): GoogleGenAI {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set in environment variables.");
-    }
+    const apiKey = getGeminiApiKey();
     return new GoogleGenAI({ apiKey });
   }
 
