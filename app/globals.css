@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --paper-bg: #F4EFEB;
+    --paper-card: #FAF7F2;
+    --paper-dark: #E6DCce;
+    --ink-black: #1E1B1A;
+    --ink-charcoal: #35312E;
+    --ink-muted: #6E665E;
+    --accent-terracotta: #C85A28;
+    --accent-ochre: #D9822B;
+    --accent-amber: #EAA846;
+    --film-black: #0C0B0A;
+    --tape-color: rgba(235, 220, 195, 0.78);
+  }
+
+  body {
+    background-color: var(--paper-bg);
+    color: var(--ink-black);
+    font-family: var(--font-sans), sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Typography Classes */
+.font-display {
+  font-family: var(--font-bebas), sans-serif;
+  letter-spacing: 0.025em;
+}
+
+.font-hand {
+  font-family: var(--font-caveat), cursive;
+  line-height: 1.15;
+}
+
+.font-serif-editorial {
+  font-family: var(--font-newsreader), Georgia, serif;
+}
+
+.font-typewriter {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0.08em;
+}
+
+/* Authentic Torn Washi Tape (Jagged edges via polygon clipping) */
+.tape-torn {
+  clip-path: polygon(
+    0% 4%, 2% 0%, 5% 5%, 8% 1%, 12% 4%, 15% 0%, 19% 4%, 22% 1%, 25% 4%, 
+    95% 2%, 98% 5%, 100% 1%, 99% 94%, 97% 99%, 95% 95%, 92% 98%, 88% 95%,
+    5% 97%, 3% 94%, 0% 98%
+  );
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), inset 0 0 4px rgba(255,255,255,0.4);
+  backdrop-filter: blur(1.5px);
+}
+
+.tape-neutral {
+  background: rgba(238, 226, 203, 0.85);
+  border-top: 1px solid rgba(255,255,255,0.5);
+  border-bottom: 1px solid rgba(190, 175, 150, 0.4);
+}
+
+.tape-amber {
+  background: rgba(235, 170, 75, 0.65);
+  border-top: 1px solid rgba(255,255,255,0.4);
+  border-bottom: 1px solid rgba(185, 130, 45, 0.4);
+}
+
+.tape-dark {
+  background: rgba(45, 41, 38, 0.75);
+  border-top: 1px solid rgba(255,255,255,0.15);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.tape-terracotta {
+  background: rgba(200, 90, 40, 0.68);
+  border-top: 1px solid rgba(255,255,255,0.3);
+  border-bottom: 1px solid rgba(140, 50, 20, 0.4);
+}
+
+/* Tactile Paper Shadows */
+.photo-shadow {
+  box-shadow: 
+    0 1px 2px rgba(20, 18, 16, 0.06),
+    0 6px 14px -2px rgba(20, 18, 16, 0.1),
+    0 14px 28px -4px rgba(20, 18, 16, 0.08),
+    0 0 0 1px rgba(20, 18, 16, 0.04);
+}
+
+.photo-shadow-deep {
+  box-shadow: 
+    0 2px 4px rgba(20, 18, 16, 0.08),
+    0 14px 28px -4px rgba(20, 18, 16, 0.18),
+    0 28px 56px -8px rgba(20, 18, 16, 0.14),
+    0 0 0 1px rgba(20, 18, 16, 0.05);
+}
+
+/* Vintage Director Ink Stamp */
+.stamp-ink {
+  border: 2px dashed currentColor;
+  padding: 4px 10px;
+  border-radius: 2px;
+  mix-blend-mode: multiply;
+  position: relative;
+}
+
+/* 35mm Sprocket Holes */
+.sprocket-strip {
+  background-image: radial-gradient(circle, #0C0B0A 3.5px, transparent 4px);
+  background-size: 14px 14px;
+  background-repeat: repeat-x;
+}
+
+/* Subtle Film Gate Wobble (Optional gentle cinematic animation) */
+@keyframes projector-wobble {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-0.5px) rotate(0.05deg); }
+  50% { transform: translateY(0.5px) rotate(-0.05deg); }
+  75% { transform: translateY(-0.2px) rotate(0.02deg); }
+}
+
+.animate-projector-wobble {
+  animation: projector-wobble 0.18s infinite steps(2);
+}
+
+/* Subtle Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #EFE7DC;
+}
+::-webkit-scrollbar-thumb {
+  background: #C6BAA9;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A69885;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
