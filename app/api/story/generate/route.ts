@@ -122,15 +122,21 @@ export async function POST(req: Request) {
       additionalNotes: interview?.additionalNotes || "",
     };
 
+    // Extract client-provided Gemini API key (BYOK)
+    const clientApiKey = req.headers.get("x-gemini-api-key") || body.apiKey || undefined;
+
     let outline;
     try {
-      outline = await activeStoryProvider.generateStoryOutline({
-        title,
-        category: resolvedCategory,
-        style: resolvedStyle,
-        memories: resolvedMemories,
-        interview: resolvedInterview,
-      });
+      outline = await activeStoryProvider.generateStoryOutline(
+        {
+          title,
+          category: resolvedCategory,
+          style: resolvedStyle,
+          memories: resolvedMemories,
+          interview: resolvedInterview,
+        },
+        { apiKey: clientApiKey }
+      );
     } catch (aiErr) {
       console.warn("[API Story Generate] Primary AI provider encountered an error, engaging deterministic fallback:", aiErr);
       const { DeterministicStoryProvider } = await import("@/lib/ai/deterministic-provider");

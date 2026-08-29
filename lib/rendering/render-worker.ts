@@ -7,10 +7,10 @@ export class RenderWorker {
   /**
    * Processes a single job immediately in the background.
    */
-  static async processJob(jobId: string) {
+  static async processJob(jobId: string, clientApiKey?: string) {
     try {
       console.log(`[RenderWorker] 🎬 Processing job ${jobId}...`);
-      const result = await RenderService.render(jobId);
+      const result = await RenderService.render(jobId, clientApiKey);
       console.log(`[RenderWorker] ✅ Job ${jobId} finished successfully. Output: ${result.outputVideoUrl} (${result.width}x${result.height}, ${result.durationSec.toFixed(1)}s)`);
       return result;
     } catch (err: unknown) {

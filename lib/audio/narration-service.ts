@@ -68,7 +68,8 @@ export class NarrationService {
     userId: string,
     projectId: string,
     chapters: ChapterNarrationInput[],
-    styleIdOrProfile?: string | VoiceProfile
+    styleIdOrProfile?: string | VoiceProfile,
+    apiKey?: string
   ): Promise<GeneratedNarrationAsset[]> {
     // 1. Verify project ownership
     const project = await prisma.project.findUnique({
@@ -83,6 +84,7 @@ export class NarrationService {
     const audioDir = this.getProjectAudioDir(userId, projectId);
     const profile = typeof styleIdOrProfile === "object" ? styleIdOrProfile : getVoiceProfileForStyle(styleIdOrProfile);
     const results: GeneratedNarrationAsset[] = [];
+    const hasKey = !!(apiKey || process.env.GEMINI_API_KEY);
 
     for (const ch of chapters) {
       if (!ch.text || ch.text.trim().length === 0) continue;
@@ -91,7 +93,7 @@ export class NarrationService {
       const storageKey = `users/${userId}/projects/${projectId}/audio/chapter_${ch.chapterNumber}_${ch.chapterId}.aac`;
 
       // Synthesize audio
-      await activeVoiceProvider.synthesize(ch.text, outputAacPath, profile);
+      await activeVoiceProvider.synthesize(ch.text, outputAacPath, profile, { apiKey });
 
       // Validate with ffprobe
       const probe = await MediaProbe.probe(outputAacPath);
@@ -104,8 +106,8 @@ export class NarrationService {
         data: {
           projectId,
           chapterId: ch.chapterId,
-          provider: process.env.GEMINI_API_KEY ? "gemini" : "system",
-          model: process.env.GEMINI_API_KEY ? "gemini-2.0-flash" : "system-say",
+          provider: hasKey ? "gemini" : "system",
+          model: hasKey ? "gemini-2.5-flash" : "system-say",
           voice: profile.geminiVoice,
           storageKey,
           mimeType: "audio/aac",

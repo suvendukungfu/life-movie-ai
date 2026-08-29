@@ -29,14 +29,17 @@ class StoryProviderRouter implements AIStoryProvider {
       : this.deterministic.name;
   }
 
-  async generateStoryOutline(input: AIStoryPromptInput): Promise<StoryOutline> {
-    if (!this.gemini) {
+  async generateStoryOutline(input: AIStoryPromptInput, options?: { apiKey?: string }): Promise<StoryOutline> {
+    const hasKey = !!(options?.apiKey || process.env.GEMINI_API_KEY);
+    if (!hasKey) {
       return this.deterministic.generateStoryOutline(input);
     }
 
     try {
-      const outline = await this.gemini.generateStoryOutline(input);
-      return outline;
+      if (!this.gemini) {
+        this.gemini = new GeminiStoryProvider();
+      }
+      return await this.gemini.generateStoryOutline(input, options);
     } catch (err) {
       console.warn(
         "[StoryProvider] Gemini generation failed, falling back to deterministic director:",

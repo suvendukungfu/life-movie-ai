@@ -163,16 +163,24 @@ export class VoiceProviderRouter implements VoiceProvider {
     return process.env.GEMINI_API_KEY ? this.gemini.name : this.system.name;
   }
 
-  async synthesize(text: string, outputAacPath: string, styleIdOrProfile?: string | VoiceProfile): Promise<string> {
+  async synthesize(
+    text: string,
+    outputAacPath: string,
+    styleIdOrProfile?: string | VoiceProfile,
+    options?: { apiKey?: string; timeoutMs?: number }
+  ): Promise<string> {
     const profile = typeof styleIdOrProfile === "object" ? styleIdOrProfile : getVoiceProfileForStyle(styleIdOrProfile);
+    const resolvedKey = options?.apiKey || (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0 ? process.env.GEMINI_API_KEY : undefined);
 
-    // 1. Try Gemini Neural TTS if key is present
-    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0) {
+    // 1. Try Gemini Neural TTS if key is present (client key or server key)
+    if (resolvedKey) {
       try {
         const result = await this.gemini.synthesize({
           text,
           outputPath: outputAacPath,
           voiceProfile: profile,
+          apiKey: resolvedKey,
+          timeoutMs: options?.timeoutMs,
         });
         return result.audioPath;
       } catch (geminiErr) {

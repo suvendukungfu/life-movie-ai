@@ -28,6 +28,7 @@ import { Memory, StoryInterviewAnswers, StoryOutline, MovieScene, MovieProject, 
 import { MediaService } from "@/lib/media/media-service";
 import { StoryGenerator } from "@/lib/ai/story-generator";
 import { projectRepository } from "@/lib/storage/project-repository";
+import { getStoredApiKey } from "@/lib/hooks/useApiKey";
 import Link from "next/link";
 
 interface ModalProps {
@@ -212,16 +213,23 @@ export function MakeMovieExperienceModal({
   // Generate Story Outline (Step 5 -> Step 6) using Real AI API endpoint
   const handlePrepareStoryOutline = async () => {
     sound.playShutter();
+    const clientApiKey = getStoredApiKey();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (clientApiKey) {
+      headers["x-gemini-api-key"] = clientApiKey;
+    }
+
     try {
       const res = await fetch("/api/story/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           title,
           category: selectedCat,
           style: selectedDir,
           memories,
           interview,
+          apiKey: clientApiKey || undefined,
         }),
       });
       const data = await res.json();
@@ -270,11 +278,17 @@ export function MakeMovieExperienceModal({
     };
 
     try {
+      const clientApiKey = getStoredApiKey();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (clientApiKey) {
+        headers["x-gemini-api-key"] = clientApiKey;
+      }
+
       // 1. Dispatch real server render job
       const jobRes = await fetch("/api/render/jobs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId }),
+        headers,
+        body: JSON.stringify({ projectId, apiKey: clientApiKey || undefined }),
       });
       const jobData = await jobRes.json();
 

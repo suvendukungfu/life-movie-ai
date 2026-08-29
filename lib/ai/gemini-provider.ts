@@ -16,8 +16,8 @@ import { getGeminiApiKey } from "@/lib/config/env";
 export class GeminiStoryProvider implements AIStoryProvider {
   name = "Gemini AI Storyteller";
 
-  private getClient(): GoogleGenAI {
-    const apiKey = getGeminiApiKey();
+  private getClient(overrideKey?: string): GoogleGenAI {
+    const apiKey = overrideKey || getGeminiApiKey();
     return new GoogleGenAI({ apiKey });
   }
 
@@ -94,9 +94,10 @@ RULES:
   }
 
   async generateStoryOutline(
-    input: AIStoryPromptInput
+    input: AIStoryPromptInput,
+    options?: { apiKey?: string }
   ): Promise<StoryOutline> {
-    const client = this.getClient();
+    const client = this.getClient(options?.apiKey);
     const prompt = this.buildPrompt(input);
 
     let lastError: unknown;

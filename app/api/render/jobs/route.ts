@@ -57,8 +57,11 @@ export async function POST(req: Request) {
       },
     });
 
+    // Extract client-provided Gemini API key (BYOK)
+    const clientApiKey = req.headers.get("x-gemini-api-key") || body.apiKey || undefined;
+
     // Fire asynchronous background worker execution
-    RenderWorker.processJob(jobId).catch((err) => {
+    RenderWorker.processJob(jobId, clientApiKey).catch((err) => {
       console.error(`Background render error for job ${jobId}:`, err);
     });
 

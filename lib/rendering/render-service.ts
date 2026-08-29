@@ -63,7 +63,7 @@ export class RenderService {
   /**
    * Executes the real server-side FFmpeg rendering pipeline.
    */
-  static async render(jobId: string): Promise<RenderResult> {
+  static async render(jobId: string, clientApiKey?: string): Promise<RenderResult> {
     const job = await prisma.generationJob.findUnique({
       where: { id: jobId },
       include: {
@@ -292,7 +292,7 @@ export class RenderService {
         if (sc.subtitle && sc.subtitle.trim().length > 0) {
           const voiceClipPath = path.join(jobDir, `voice_${i + 1}.aac`);
           try {
-            await activeVoiceProvider.synthesize(sc.subtitle, voiceClipPath, styleMood);
+            await activeVoiceProvider.synthesize(sc.subtitle, voiceClipPath, styleMood, { apiKey: clientApiKey });
             if (fs.existsSync(voiceClipPath)) {
               const probe = await MediaProbe.probe(voiceClipPath);
               voiceCues.push({
@@ -303,11 +303,12 @@ export class RenderService {
 
               // Persist audio asset record
               try {
+                const hasKey = !!(clientApiKey || process.env.GEMINI_API_KEY);
                 await prisma.audioAsset.create({
                   data: {
                     projectId: project.id,
-                    provider: process.env.GEMINI_API_KEY ? "gemini" : "system",
-                    model: process.env.GEMINI_API_KEY ? "gemini-2.0-flash" : "system-say",
+                    provider: hasKey ? "gemini" : "system",
+                    model: hasKey ? "gemini-2.5-flash" : "system-say",
                     voice: styleMood,
                     storageKey: `users/${project.userId}/projects/${project.id}/audio/voice_${i + 1}.aac`,
                     mimeType: "audio/aac",

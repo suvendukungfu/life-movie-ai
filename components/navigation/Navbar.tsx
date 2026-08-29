@@ -1,12 +1,12 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { sound } from "@/lib/audio-synth";
-import { VolumeX, Clapperboard, FolderHeart } from "lucide-react";
+import { VolumeX, Clapperboard, FolderHeart, KeyRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AuthUser } from "@/lib/auth/types";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { ApiKeySettingsModal } from "@/components/settings/ApiKeySettingsModal";
+import { useApiKey } from "@/lib/hooks/useApiKey";
 
 interface NavbarProps {
   onOpenMakeMovie: () => void;
@@ -17,6 +17,8 @@ export function Navbar({ onOpenMakeMovie }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  const { hasKey, maskedKey } = useApiKey();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -160,6 +162,26 @@ export function Navbar({ onOpenMakeMovie }: NavbarProps) {
             </Link>
           </nav>
 
+          {/* Bring Your Own Key (BYOK) Button */}
+          <button
+            onClick={() => {
+              sound.playTap();
+              setApiKeyModalOpen(true);
+            }}
+            className={cn(
+              "font-mono text-xs uppercase tracking-wider transition-colors py-1 px-2.5 border rounded-xs flex items-center gap-1.5 cursor-pointer",
+              hasKey
+                ? "bg-emerald-50/80 border-emerald-300 text-emerald-800 hover:border-emerald-500"
+                : "bg-[#ECE3D5]/60 border-[#D8CCBC] text-[#635A4F] hover:border-[#C85A28] hover:text-[#C85A28]"
+            )}
+            title={hasKey ? `Gemini Key Active (${maskedKey})` : "Configure your Google Gemini API key"}
+          >
+            <KeyRound className={cn("w-3 h-3", hasKey ? "text-emerald-600" : "text-[#8C827A]")} />
+            <span className="hidden sm:inline font-bold">
+              {hasKey ? `GEMINI: ${maskedKey}` : "SET GEMINI KEY"}
+            </span>
+          </button>
+
           {/* User Auth or Sign In Button */}
           {user ? (
             <div className="flex items-center gap-2">
@@ -205,6 +227,11 @@ export function Navbar({ onOpenMakeMovie }: NavbarProps) {
         onSuccess={(loggedUser) => {
           setUser(loggedUser);
         }}
+      />
+
+      <ApiKeySettingsModal
+        isOpen={apiKeyModalOpen}
+        onClose={() => setApiKeyModalOpen(false)}
       />
     </header>
   );
