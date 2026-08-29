@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/db/client";
+import { AuthService } from "@/lib/auth/auth-service";
 
 interface RouteProps {
   params: Promise<{ id: string }>;
@@ -17,6 +18,17 @@ export async function GET(req: Request, { params }: RouteProps) {
 
   if (!job || !job.project) {
     return NextResponse.json({ success: false, error: "Poster frame not found." }, { status: 404 });
+  }
+
+  // Verify ownership or public project access
+  if (job.project.privacy === "private") {
+    const session = await AuthService.getSession(req);
+    if (!session.isAuthenticated || session.user.id !== job.project.userId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized access to private film poster." },
+        { status: 403 }
+      );
+    }
   }
 
   const filePath = path.join(

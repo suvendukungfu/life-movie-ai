@@ -174,6 +174,31 @@ async function runBackendIntegrationTests() {
       "Reload query retrieves complete persistent project and permanent memory references"
     );
 
+    // ---------------------------------------------------------
+    // TEST 7: Path Traversal Defense Verification
+    // ---------------------------------------------------------
+    const traversalAttempt1 = storageDriver.getMediaFile("../../../../etc/passwd");
+    const traversalAttempt2 = storageDriver.getMediaFile("users/../../../../../../etc/hosts");
+    const traversalAttempt3 = storageDriver.getMediaFile("users/cmte/projects/film/media/mem/../../../../../../../var/log/system.log");
+
+    assert(!traversalAttempt1.exists && traversalAttempt1.filePath.length === 0, "Path traversal attack 1 strictly contained and blocked");
+    assert(!traversalAttempt2.exists && traversalAttempt2.filePath.length === 0, "Path traversal attack 2 strictly contained and blocked");
+    assert(!traversalAttempt3.exists && traversalAttempt3.filePath.length === 0, "Path traversal attack 3 strictly contained and blocked");
+
+    // ---------------------------------------------------------
+    // TEST 8: Project Overwrite Access Control
+    // ---------------------------------------------------------
+    const userAProject = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { userId: true },
+    });
+
+    const isAuthorizedToModify = userAProject?.userId === userA.id;
+    const isUserBAuthorizedToModify = userAProject?.userId === userB.id;
+
+    assert(isAuthorizedToModify, "User A authorized to modify own project");
+    assert(!isUserBAuthorizedToModify, "User B strictly forbidden from modifying User A project");
+
     console.log("\n==================================================");
     console.log(`🏁 TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
     console.log("==================================================");

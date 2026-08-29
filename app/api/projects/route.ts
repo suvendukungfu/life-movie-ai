@@ -156,6 +156,20 @@ export async function POST(req: Request) {
     const categoryJson = JSON.stringify(body.category || {});
     const styleJson = JSON.stringify(body.style || {});
 
+    // Verify ownership if project already exists
+    if (body.id) {
+      const existingProject = await prisma.project.findUnique({
+        where: { id: body.id },
+        select: { userId: true },
+      });
+      if (existingProject && existingProject.userId !== session.user.id) {
+        return NextResponse.json(
+          { success: false, error: "You do not have authorization to modify this project." },
+          { status: 403 }
+        );
+      }
+    }
+
     // Create or update project in Prisma database
     const dbProject = await prisma.project.upsert({
       where: { id: projectId },

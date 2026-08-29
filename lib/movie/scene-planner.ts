@@ -1,5 +1,3 @@
-import { Memory } from "@/lib/types/domain";
-
 export interface PlannedScene {
   id: string;
   order: number;

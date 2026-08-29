@@ -13,6 +13,26 @@ export interface MediaProbeResult {
   fileSizeBytes: number;
 }
 
+interface FFprobeStream {
+  codec_type?: string;
+  codec_name?: string;
+  width?: number;
+  height?: number;
+  duration?: string;
+  r_frame_rate?: string;
+}
+
+interface FFprobeFormat {
+  duration?: string;
+  format_name?: string;
+  size?: string;
+}
+
+interface FFprobeOutput {
+  streams?: FFprobeStream[];
+  format?: FFprobeFormat;
+}
+
 export class MediaProbe {
   static async probe(filePath: string): Promise<MediaProbeResult> {
     const args = [
@@ -26,15 +46,15 @@ export class MediaProbe {
     ];
 
     const res = await FFmpegRunner.runFFprobe(args);
-    const parsed = JSON.parse(res.stdout);
+    const parsed = JSON.parse(res.stdout) as FFprobeOutput;
 
-    const videoStream = parsed.streams?.find((s: any) => s.codec_type === "video");
-    const audioStream = parsed.streams?.find((s: any) => s.codec_type === "audio");
+    const videoStream = parsed.streams?.find((stream) => stream.codec_type === "video");
+    const audioStream = parsed.streams?.find((stream) => stream.codec_type === "audio");
 
-    let width = videoStream?.width || 0;
-    let height = videoStream?.height || 0;
-    let durationSec = parseFloat(parsed.format?.duration || videoStream?.duration || audioStream?.duration || "0");
-    let fileSizeBytes = parseInt(parsed.format?.size || "0", 10);
+    const width = videoStream?.width || 0;
+    const height = videoStream?.height || 0;
+    const durationSec = parseFloat(parsed.format?.duration || videoStream?.duration || audioStream?.duration || "0");
+    const fileSizeBytes = parseInt(parsed.format?.size || "0", 10);
 
     // Calculate FPS
     let fps = 24;
