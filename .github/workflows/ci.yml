@@ -1,0 +1,61 @@
+name: CI / Production Pipeline Verification
+
+on:
+  push:
+    branches: [main, "release/**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build, Lint & Test Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: 🎞️ Install FFmpeg & Media Utilities
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🗄️ Generate Prisma Client & Sync SQLite Schema
+        env:
+          DATABASE_URL: "file:./ci_test.db"
+        run: |
+          npx prisma generate
+          npx prisma db push
+
+      - name: 🧪 Run Automated Integration Tests
+        env:
+          DATABASE_URL: "file:./ci_test.db"
+          AUTH_SECRET: "ci_testing_super_secret_jwt_key_2026"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          npx tsx tests/backend-integration.test.ts
+          npx tsx tests/rendering/render-pipeline.test.ts
+          if [ -n "$GEMINI_API_KEY" ]; then
+            npx tsx tests/gemini-test.ts
+          else
+            echo "ℹ️ GEMINI_API_KEY secret not present in CI environment; skipping live Gemini API test."
+          fi
+
+      - name: 🏗️ Verify Production Build
+        env:
+          DATABASE_URL: "file:./ci_test.db"
+          AUTH_SECRET: "ci_testing_super_secret_jwt_key_2026"
+        run: npm run build
