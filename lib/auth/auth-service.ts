@@ -36,26 +36,33 @@ export class AuthService {
       return { user: null as unknown as AuthUser, isAuthenticated: false };
     }
 
-    // Check user exists in database
-    const dbUser = await prisma.user.findUnique({
-      where: { id: payload.id },
-      select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
-    });
+    try {
+      const { ensureDbSchema } = await import("@/lib/db/client");
+      await ensureDbSchema();
 
-    if (!dbUser) {
+      // Check user exists in database
+      const dbUser = await prisma.user.findUnique({
+        where: { id: payload.id },
+        select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
+      });
+
+      if (!dbUser) {
+        return { user: null as unknown as AuthUser, isAuthenticated: false };
+      }
+
+      return {
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          name: dbUser.name,
+          avatarUrl: dbUser.avatarUrl || undefined,
+          createdAt: dbUser.createdAt.toISOString(),
+        },
+        isAuthenticated: true,
+      };
+    } catch {
       return { user: null as unknown as AuthUser, isAuthenticated: false };
     }
-
-    return {
-      user: {
-        id: dbUser.id,
-        email: dbUser.email,
-        name: dbUser.name,
-        avatarUrl: dbUser.avatarUrl || undefined,
-        createdAt: dbUser.createdAt.toISOString(),
-      },
-      isAuthenticated: true,
-    };
   }
 
   /**
