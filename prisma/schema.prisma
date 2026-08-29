@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  avatarUrl    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  projects     Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id               String          @id @default(cuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  categoryJson     String          // Serialized StoryCategory
+  styleJson        String          // Serialized DirectorStyle
+  description      String?
+  privacy          String          @default("public") // private | unlisted | public
+  status           String          @default("draft")  // draft | uploading | processing | generating | ready | failed
+  publicShareId    String?         @unique
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  memories         Memory[]
+  interview        StoryInterview?
+  storyOutline     StoryOutline?
+  scenes           MovieScene[]
+  jobs             GenerationJob[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model Memory {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type         String   // photo | video | audio | text
+  url          String
+  thumbnailUrl String?
+  storageKey   String?
+  thumbnailKey String?
+  caption      String?
+  date         String?
+  location     String?
+  peopleJson   String   @default("[]")
+  sortOrder    Int      @default(0)
+  aspect       String?  @default("aspect-4/3")
+  rotation     Float?   @default(0)
+  fileSize     Int?
+  fileName     String?
+  mimeType     String?
+  width        Int?
+  height       Int?
+  duration     Float?
+  status       String   @default("ready") // uploading | ready | error
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([projectId])
+  @@map("memories")
+}
+
+model StoryInterview {
+  id                  String   @id @default(cuid())
+  projectId           String   @unique
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  about               String?
+  people              String?
+  unforgettableMoment String?
+  hardestMoment       String?
+  turningPoint        String?
+  endingFeeling       String   @default("nostalgic")
+  additionalNotes     String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("story_interviews")
+}
+
+model StoryOutline {
+  id        String         @id @default(cuid())
+  projectId String         @unique
+  project   Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  logline   String
+  theme     String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  chapters  StoryChapter[]
+
+  @@map("story_outlines")
+}
+
+model StoryChapter {
+  id              String       @id @default(cuid())
+  outlineId       String
+  outline         StoryOutline @relation(fields: [outlineId], references: [id], onDelete: Cascade)
+  chapterNumber   Int
+  title           String
+  handwrittenBeat String
+  synopsis        String
+  targetTone      String
+  memoryIdsJson   String       @default("[]")
+  createdAt       DateTime     @default(now())
+
+  @@index([outlineId])
+  @@map("story_chapters")
+}
+
+model MovieScene {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  order          Int
+  title          String
+  description    String?
+  mediaId        String
+  mediaUrl       String
+  voiceover      String?
+  durationSec    Float    @default(4.5)
+  transition     String   @default("fade")
+  subtitle       String?
+  cameraMovement String   @default("slow_zoom_in")
+  createdAt      DateTime @default(now())
+
+  @@index([projectId])
+  @@map("movie_scenes")
+}
+
+model GenerationJob {
+  id               String    @id @default(cuid())
+  projectId        String
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status           String    @default("queued") // queued | analyzing | story_ready | generating_audio | composing | complete | failed
+  progress         Int       @default(0)
+  currentStage     String    @default("queued")
+  stageDescription String    @default("01 / QUEUED FOR PROCESSING")
+  logsJson         String    @default("[]")
+  outputVideoUrl   String?
+  error            String?
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime?
+
+  @@index([projectId])
+  @@map("generation_jobs")
+}
