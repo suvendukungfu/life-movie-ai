@@ -39,9 +39,30 @@ model Project {
   storyOutline     StoryOutline?
   scenes           MovieScene[]
   jobs             GenerationJob[]
+  audioAssets      AudioAsset[]
 
   @@index([userId])
   @@map("projects")
+}
+
+model AudioAsset {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chapterId   String?
+  provider    String   // gemini | system | harmonic
+  model       String   // gemini-2.0-flash | system-say | etc.
+  voice       String   // Puck | Charon | Kore | Fenrir | Aoede | default
+  storageKey  String
+  mimeType    String   @default("audio/aac")
+  durationSec Float    @default(0)
+  sampleRate  Int      @default(48000)
+  channels    Int      @default(2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+  @@map("audio_assets")
 }
 
 model Memory {

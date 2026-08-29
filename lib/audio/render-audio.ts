@@ -1,35 +1,41 @@
+import { CinemaScoreGenerator } from "./cinema-score";
 import { FFmpegRunner } from "@/lib/rendering/ffmpeg-runner";
 
 export class RenderAudioService {
   /**
-   * Generates a 48kHz stereo AAC ambient soundtrack matching the film duration.
+   * Generates a 48kHz stereo AAC harmonic soundtrack matching the film duration and mood.
    */
   static async generateSoundtrack(
     durationSec: number,
     outputAudioPath: string,
-    mood: string = "warm"
+    mood: string = "nostalgia"
   ): Promise<string> {
-    const freq = mood.toLowerCase().includes("nostalgia") ? 220 : 174.61;
-    const fadeOutStart = Math.max(0, durationSec - 2);
+    try {
+      return await CinemaScoreGenerator.generateHarmonicScore(durationSec, outputAudioPath, mood);
+    } catch {
+      // Fallback to simple filtered sine bed
+      const freq = mood.toLowerCase().includes("nostalgia") ? 220 : 174.61;
+      const fadeOutStart = Math.max(0, durationSec - 2);
 
-    const args = [
-      "-y",
-      "-f",
-      "lavfi",
-      "-i",
-      `sine=f=${freq}:d=${durationSec}`,
-      "-af",
-      `volume=0.06,lowpass=f=900,afade=t=in:ss=0:d=1.5,afade=t=out:st=${fadeOutStart}:d=2`,
-      "-c:a",
-      "aac",
-      "-b:a",
-      "192k",
-      "-ar",
-      "48000",
-      outputAudioPath,
-    ];
+      const args = [
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        `sine=f=${freq}:d=${durationSec}`,
+        "-af",
+        `volume=0.06,lowpass=f=900,afade=t=in:ss=0:d=1.5,afade=t=out:st=${fadeOutStart}:d=2`,
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-ar",
+        "48000",
+        outputAudioPath,
+      ];
 
-    await FFmpegRunner.runFFmpeg(args);
-    return outputAudioPath;
+      await FFmpegRunner.runFFmpeg(args);
+      return outputAudioPath;
+    }
   }
 }
