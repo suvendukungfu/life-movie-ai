@@ -101,34 +101,51 @@ RULES:
     const client = this.getClient();
     const prompt = this.buildPrompt(input);
 
-    const response = await client.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-      },
-    });
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const response = await client.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: prompt,
+          config: {
+            temperature: 0.7,
+            maxOutputTokens: 4096,
+          },
+        });
 
-    const rawText = response.text ?? "";
+        const rawText = response.text ?? "";
 
-    // Strip markdown code fences if Gemini wraps the response
-    let jsonText = rawText.trim();
-    if (jsonText.startsWith("```")) {
-      jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/```\s*$/, "");
+        // Strip markdown code fences if Gemini wraps the response
+        let jsonText = rawText.trim();
+        if (jsonText.startsWith("```")) {
+          jsonText = jsonText.replace(/^```(?:json)?\s*/, "").replace(/```\s*$/, "");
+        }
+
+        let parsed: Record<string, unknown>;
+        try {
+          parsed = JSON.parse(jsonText);
+        } catch {
+          throw new Error(
+            `Gemini returned invalid JSON. Raw response (first 500 chars): ${rawText.slice(0, 500)}`
+          );
+        }
+
+        // Validate and transform to StoryOutline
+        return this.validateAndTransform(parsed, input);
+      } catch (err: unknown) {
+        lastError = err;
+        const errString = String(err);
+        if (attempt < 3 && (errString.includes("429") || errString.includes("RESOURCE_EXHAUSTED"))) {
+          const waitTime = attempt * 5000;
+          console.warn(`[GeminiStoryProvider] Rate limit (429) encountered. Retrying in ${waitTime / 1000}s (attempt ${attempt}/3)...`);
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        } else {
+          throw err;
+        }
+      }
     }
 
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(jsonText);
-    } catch {
-      throw new Error(
-        `Gemini returned invalid JSON. Raw response (first 500 chars): ${rawText.slice(0, 500)}`
-      );
-    }
-
-    // Validate and transform to StoryOutline
-    return this.validateAndTransform(parsed, input);
+    throw lastError;
   }
 
   private validateAndTransform(
