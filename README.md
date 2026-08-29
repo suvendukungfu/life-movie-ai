@@ -140,13 +140,36 @@ npm install
 ```bash
 cp .env.example .env
 ```
-Edit `.env` and provide your Gemini API key and a secure session secret:
+Edit `.env` and configure your credentials:
 ```env
 DATABASE_URL="file:./dev.db"
 AUTH_SECRET="your-32-char-random-secret-key"
-GEMINI_API_KEY="your-gemini-api-key-from-google-ai-studio"
+GEMINI_API_KEY="your-gemini-api-key-here"
 PORT=3001
 ```
+
+---
+
+## 🔐 Environment Variables & Secrets
+
+### 1. `GEMINI_API_KEY` (Required for live AI Screenplay generation)
+- **Purpose**: Authenticates server-side requests to Google Gemini 2.5 Flash (`@google/genai`) for synthesizing memories and interview responses into a 5-act screenplay.
+- **Security Rule**: Processed **strictly on the server**. Never prefix with `NEXT_PUBLIC_`, never commit to git, and never send to client browsers.
+- **Acquiring a Key**: Obtain a free API key at [Google AI Studio](https://aistudio.google.com/).
+- **Fallback Behavior**: When `GEMINI_API_KEY` is not set (such as in basic local development or offline environments), LIFE MOVIE seamlessly engages the built-in deterministic story engine so development and rendering can proceed without disruption.
+
+### 2. Setting Up GitHub Actions CI Secrets
+To enable live AI screenplay testing in automated GitHub Actions CI pipelines:
+1. Navigate to your repository on GitHub: `https://github.com/<your-username>/life-movie-ai`.
+2. Click **Settings** > **Secrets and variables** > **Actions**.
+3. Click **New repository secret**.
+4. Set Name: `GEMINI_API_KEY`.
+5. Set Secret: Paste your newly generated Gemini API key.
+6. Click **Add secret**.
+
+*(Note: If the secret is not configured in GitHub, CI automatically and gracefully tests the deterministic engine without failing the build).*
+
+---
 
 ### 4. Initialize Database
 ```bash
