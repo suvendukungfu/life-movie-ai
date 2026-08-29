@@ -3,16 +3,16 @@
 > **LIFE MOVIE is an AI-powered personal filmmaking application that transforms memories and photographs into cinematic 2.39:1 films using Gemini for screenplay generation and FFmpeg for real video rendering.**
 
 ```text
-Current release: v0.2.0
+Current release: v0.3.0
 
 AI:
-Google Gemini 2.5 Flash
+Google Gemini 2.5 Flash (Screenplay + Neural Narration)
 
-Rendering:
-FFmpeg + H.264 + AAC (1920x804 Cinemascope)
+Rendering & Mastering:
+FFmpeg + H.264 + AAC + EBU R128 (1920x804 Cinemascope)
 
 Database:
-Prisma + SQLite
+Prisma + SQLite (with AudioAsset persistence)
 
 Authentication:
 bcrypt + signed HTTP-only JWT sessions
@@ -267,6 +267,7 @@ life-movie-ai/
 │   └── e2e-reality-audit.ts    # 34-step live pipeline audit runner
 └── tests/                      # Automated test suite
     ├── backend-integration.test.ts # Auth, Prisma, Storage tests
+    ├── audio/                  # Audio DSP & Narration mastering tests
     ├── gemini-test.ts          # Live Gemini 2.5 Flash story tests
     └── rendering/              # FFmpeg render pipeline tests
 ```
@@ -290,11 +291,11 @@ For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## ⚠️ Known Limitations
+## ⚠️ Architecture Notes
 
-- **Single-Node Queue**: The current render queue runs in-process on the local server. For multi-server production scale, a Redis/BullMQ worker is planned.
-- **Local Filesystem Default**: By default, media binaries are saved to `.storage/` on the local machine. Cloudflare R2 / S3 adapters are scheduled for v0.3.
-- **TTS Synthesis**: Spoken voiceover currently utilizes system TTS (`say` on macOS) or synthesized audio cues. External ElevenLabs integration is on the v0.3 roadmap.
+- **Single-Node Queue**: The current render queue runs in-process on the local server. For distributed multi-server scale, an external Redis/BullMQ worker adapter can be plugged into `RenderService`.
+- **Local Filesystem Default**: By default, media binaries are saved to `.storage/` on the local machine with path-traversal containment. Cloudflare R2 / S3 adapters can be easily slotted into `LocalStorageDriver`.
+- **Zero-Cost Neural Audio**: Uses existing `GEMINI_API_KEY` for Google Gemini 2.5 Flash Neural Narration with automatic system TTS fallback and harmonic cinema bed generation.
 
 ---
 
