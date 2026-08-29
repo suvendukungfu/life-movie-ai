@@ -44,7 +44,7 @@ jobs:
         env:
           DATABASE_URL: "file:./ci_test.db"
           AUTH_SECRET: "ci_testing_super_secret_jwt_key_2026"
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || '' }}
+          GEMINI_API_KEY: ${{ secrets['GEMINI_API_KEY'] }}
         run: |
           npx tsx tests/backend-integration.test.ts
           npx tsx tests/rendering/render-pipeline.test.ts
