@@ -93,7 +93,7 @@ async function runV03AudioE2E() {
   console.log("✅ 5 real photographic memory assets initialized in project storage");
 
   // Create Story Outline & Chapters
-  const outline = await prisma.storyOutline.create({
+  await prisma.storyOutline.create({
     data: {
       projectId: project.id,
       logline: "Four transformative engineering years forged through late-night camaraderie and graduation triumphs.",

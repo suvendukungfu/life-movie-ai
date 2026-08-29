@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { getGeminiApiKey } from "@/lib/config/env";
 import { FFmpegRunner } from "@/lib/rendering/ffmpeg-runner";
-import { MediaProbe, MediaProbeResult } from "@/lib/rendering/media-probe";
+import { MediaProbe } from "@/lib/rendering/media-probe";
 import { VoiceProfile, VOICE_PROFILES } from "./voice-profiles";
 
 export interface GeminiTTSOptions {
