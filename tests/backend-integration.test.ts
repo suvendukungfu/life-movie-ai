@@ -199,6 +199,13 @@ async function runBackendIntegrationTests() {
     assert(isAuthorizedToModify, "User A authorized to modify own project");
     assert(!isUserBAuthorizedToModify, "User B strictly forbidden from modifying User A project");
 
+    // ---------------------------------------------------------
+    // TEST 9: Health & Operational Diagnostics Check
+    // ---------------------------------------------------------
+    const dbCheck = await prisma.$queryRaw`SELECT 1 as healthy`;
+    const isDbOperational = Array.isArray(dbCheck) && dbCheck.length > 0;
+    assert(isDbOperational, "Database connection operational for health checks");
+
     console.log("\n==================================================");
     console.log(`🏁 TEST RESULTS: ${passed} PASSED, ${failed} FAILED`);
     console.log("==================================================");

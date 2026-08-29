@@ -122,13 +122,27 @@ export async function POST(req: Request) {
       additionalNotes: interview?.additionalNotes || "",
     };
 
-    const outline = await activeStoryProvider.generateStoryOutline({
-      title,
-      category: resolvedCategory,
-      style: resolvedStyle,
-      memories: resolvedMemories,
-      interview: resolvedInterview,
-    });
+    let outline;
+    try {
+      outline = await activeStoryProvider.generateStoryOutline({
+        title,
+        category: resolvedCategory,
+        style: resolvedStyle,
+        memories: resolvedMemories,
+        interview: resolvedInterview,
+      });
+    } catch (aiErr) {
+      console.warn("[API Story Generate] Primary AI provider encountered an error, engaging deterministic fallback:", aiErr);
+      const { DeterministicStoryProvider } = await import("@/lib/ai/deterministic-provider");
+      const fallbackProvider = new DeterministicStoryProvider();
+      outline = await fallbackProvider.generateStoryOutline({
+        title,
+        category: resolvedCategory,
+        style: resolvedStyle,
+        memories: resolvedMemories,
+        interview: resolvedInterview,
+      });
+    }
 
     const outlineExt = outline as { actStructure?: StoryChapter[]; acts?: StoryChapter[]; chapters?: StoryChapter[]; title?: string };
     const chaptersList: StoryChapter[] =

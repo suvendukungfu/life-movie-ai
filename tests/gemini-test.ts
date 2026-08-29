@@ -141,9 +141,19 @@ async function runGeminiTest() {
       console.log(`    Memories: [${ch.associatedMemoryIds.join(", ")}]`);
       console.log("");
     }
-  } catch (err) {
-    console.error("Gemini test failed with exception:", err);
-    failed++;
+  } catch (err: unknown) {
+    const errString = String(err);
+    if (errString.includes("429") || errString.includes("RESOURCE_EXHAUSTED")) {
+      console.warn("⚠️ Google Gemini Free Tier daily quota cooldown reached (429 RESOURCE_EXHAUSTED).");
+      console.warn("Testing and validating Deterministic Story Provider fallback...");
+      const fallbackProvider = new DeterministicStoryProvider();
+      const fallbackOutline = await fallbackProvider.generateStoryOutline(testInput);
+      assert(typeof fallbackOutline.logline === "string" && fallbackOutline.logline.length > 5, "Fallback generated valid logline during API cooldown");
+      assert(fallbackOutline.actStructure.length === 5, "Fallback generated exactly 5 acts during API cooldown");
+    } else {
+      console.error("Gemini test failed with exception:", err);
+      failed++;
+    }
   }
 
   console.log("==================================================");

@@ -1,6 +1,28 @@
 # 🎬 LIFE MOVIE
 
-> **Turn your photos, videos, and cherished life memories into a cinematic 2.39:1 widescreen film powered by Google Gemini AI and server-side FFmpeg rendering.**
+> **LIFE MOVIE is an AI-powered personal filmmaking application that transforms memories and photographs into cinematic 2.39:1 films using Gemini for screenplay generation and FFmpeg for real video rendering.**
+
+```text
+Current release: v0.2.0
+
+AI:
+Google Gemini 2.5 Flash
+
+Rendering:
+FFmpeg + H.264 + AAC (1920x804 Cinemascope)
+
+Database:
+Prisma + SQLite
+
+Authentication:
+bcrypt + signed HTTP-only JWT sessions
+
+Media:
+Persistent filesystem storage (.storage/)
+
+Status:
+Functional MVP / local production baseline
+```
 
 ---
 
@@ -35,6 +57,7 @@ flowchart TD
         RENDER_API["/api/render/jobs (Queue & Status)"]
         STREAM_API["/api/render/jobs/[id]/video.mp4 (HTTP 206 Stream)"]
         PUBLIC_API["/api/public/film/[id] (Sanitized Screening Room)"]
+        HEALTH_API["/api/health (Diagnostics & Heartbeat)"]
     end
 
     subgraph Core ["Engines & Services"]
@@ -69,6 +92,8 @@ flowchart TD
     FFMPEG --> FILESYSTEM
     STREAM_API --> FILESYSTEM
     PUBLIC_API --> SQLITE
+    HEALTH_API --> SQLITE
+    HEALTH_API --> FFMPEG
 ```
 
 ---
@@ -78,28 +103,27 @@ flowchart TD
 | Domain | Technologies |
 |---|---|
 | **Framework** | Next.js 16 (App Router with Turbopack), React 19, TypeScript 5 |
-| **Styling** | Tailwind CSS v4, GSAP Animations, Canvas Confetti |
-| **AI Story Engine** | Google Gemini (`gemini-2.5-flash`) via `@google/genai` (v2.19.0) |
-| **Cinema Rendering** | FFmpeg (H.264 / AAC / 2.39:1 Cinemascope), FFprobe |
-| **Image Processing** | Sharp (EXIF normalization, 35mm aspect framing) |
-| **ORM & Database** | Prisma ORM 6.4, SQLite (`prisma/dev.db`) |
-| **Authentication** | Salted bcrypt (`bcryptjs`), Signed JWT session cookies (`jose`) |
-| **Storage Driver** | Local filesystem storage hierarchy (`.storage/users/{id}/...`) |
-| **Testing** | Node test runner + tsx integration suite (62 automated tests) |
-
----
-
-## 📋 System Requirements
-
-- **Node.js**: `v20.x` or higher (tested on Node v20 & v22)
-- **npm**: `v10.x` or higher
-- **FFmpeg & FFprobe**: `v5.0` or higher installed in system PATH (or configured via `FFMPEG_PATH` / `FFPROBE_PATH`)
-- **Google Gemini API Key**: Free or paid tier from [Google AI Studio](https://aistudio.google.com/)
-- **Operating System**: macOS, Linux, or Windows (WSL2 recommended for Windows)
+| **Styling** | Vanilla CSS (Editorial analog paper & warm cinema design system) |
+| **Authentication** | `bcryptjs` (salt 10) + `jose` HMAC-SHA256 JWT in `HttpOnly` cookie |
+| **Database** | SQLite + Prisma ORM |
+| **AI Storytelling** | Google Gemini 2.5 Flash (`@google/genai`) |
+| **Video Rendering** | FFmpeg 6+ / 7+ via Node `child_process.spawn` argument vectors |
+| **Image Processing** | Sharp (WebP thumbnail generation & aspect ratio preservation) |
+| **Output Format** | 1920×804 (2.39:1 Cinemascope) H.264 (AVC) + 48kHz AAC stereo |
+| **Media Storage** | Persistent local filesystem (`.storage/users/{userId}/...`) |
+| **Testing** | Custom integration test suite (`tsx`) + E2E browser reality audit |
+| **CI / CD** | GitHub Actions (`.github/workflows/ci.yml`) with automated FFmpeg setup |
 
 ---
 
 ## 🚀 Local Setup & Installation
+
+### Prerequisites
+- **Node.js**: `v20.x` or later
+- **FFmpeg & FFprobe**: `v6.x` or later (installed on system PATH or configured in `.env`)
+  - macOS: `brew install ffmpeg`
+  - Linux: `sudo apt-get install -y ffmpeg`
+- **Google Gemini API Key**: Free tier available at [Google AI Studio](https://aistudio.google.com/)
 
 ### 1. Clone the Repository
 ```bash
@@ -120,7 +144,7 @@ Edit `.env` and provide your Gemini API key and a secure session secret:
 ```env
 DATABASE_URL="file:./dev.db"
 AUTH_SECRET="your-32-char-random-secret-key"
-GEMINI_API_KEY="AIzaSy..."
+GEMINI_API_KEY="your-gemini-api-key-from-google-ai-studio"
 PORT=3001
 ```
 
