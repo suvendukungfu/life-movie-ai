@@ -51,6 +51,7 @@ jobs:
         run: |
           npx tsx tests/backend-integration.test.ts
           npx tsx tests/rendering/render-pipeline.test.ts
+          npx tsx tests/audio/audio-mastering.test.ts
           npx tsx tests/gemini-test.ts
 
       - name: 🏗️ Verify Production Build
