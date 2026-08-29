@@ -9,7 +9,11 @@ export interface AIStoryPromptInput {
   interview: StoryInterviewAnswers;
 }
 
+export interface StoryGenerationOptions {
+  apiKey?: string;
+}
+
 export interface AIStoryProvider {
   name: string;
-  generateStoryOutline(input: AIStoryPromptInput): Promise<StoryOutline>;
+  generateStoryOutline(input: AIStoryPromptInput, options?: StoryGenerationOptions): Promise<StoryOutline>;
 }

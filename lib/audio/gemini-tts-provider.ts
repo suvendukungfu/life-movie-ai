@@ -11,6 +11,7 @@ export interface GeminiTTSOptions {
   outputPath: string;
   voiceProfile?: VoiceProfile;
   timeoutMs?: number;
+  apiKey?: string;
 }
 
 export interface GeminiTTSResult {
@@ -61,8 +62,8 @@ export class GeminiTTSProvider {
   name = "Google Gemini Neural Narration";
   private defaultModel = "gemini-2.5-flash";
 
-  private getClient(): GoogleGenAI {
-    const apiKey = getGeminiApiKey();
+  private getClient(overrideKey?: string): GoogleGenAI {
+    const apiKey = overrideKey || getGeminiApiKey();
     return new GoogleGenAI({ apiKey });
   }
 
@@ -70,13 +71,13 @@ export class GeminiTTSProvider {
    * Synthesizes narration text using Google Gemini Audio Output / TTS.
    */
   async synthesize(options: GeminiTTSOptions): Promise<GeminiTTSResult> {
-    const { text, outputPath, voiceProfile = VOICE_PROFILES.nostalgia, timeoutMs = 30000 } = options;
+    const { text, outputPath, voiceProfile = VOICE_PROFILES.nostalgia, timeoutMs = 30000, apiKey } = options;
 
     if (!text || text.trim().length === 0) {
       throw new Error("Narration text cannot be empty.");
     }
 
-    const ai = this.getClient();
+    const ai = this.getClient(apiKey);
     const tempDir = path.dirname(outputPath);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });

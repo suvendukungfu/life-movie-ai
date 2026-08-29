@@ -53,6 +53,7 @@ jobs:
           npx tsx tests/rendering/render-pipeline.test.ts
           npx tsx tests/audio/audio-mastering.test.ts
           npx tsx tests/gemini-test.ts
+          npx tsx tests/byok-key-forwarding.test.ts
 
       - name: 🏗️ Verify Production Build
         run: npm run build
