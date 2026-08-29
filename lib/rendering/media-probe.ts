@@ -9,6 +9,8 @@ export interface MediaProbeResult {
   hasVideo: boolean;
   codecName?: string;
   audioCodecName?: string;
+  audioSampleRate?: number;
+  audioChannels?: number;
   formatName: string;
   fileSizeBytes: number;
 }
@@ -20,6 +22,8 @@ interface FFprobeStream {
   height?: number;
   duration?: string;
   r_frame_rate?: string;
+  sample_rate?: string;
+  channels?: number;
 }
 
 interface FFprobeFormat {
@@ -74,6 +78,8 @@ export class MediaProbe {
       hasAudio: !!audioStream,
       codecName: videoStream?.codec_name,
       audioCodecName: audioStream?.codec_name,
+      audioSampleRate: audioStream?.sample_rate ? parseInt(audioStream.sample_rate, 10) : undefined,
+      audioChannels: audioStream?.channels,
       formatName: parsed.format?.format_name || "unknown",
       fileSizeBytes,
     };

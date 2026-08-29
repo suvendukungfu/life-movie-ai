@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx tests/backend-integration.test.ts && tsx tests/rendering/render-pipeline.test.ts && tsx tests/gemini-test.ts",
+    "test": "tsx tests/backend-integration.test.ts && tsx tests/rendering/render-pipeline.test.ts && tsx tests/audio/audio-mastering.test.ts && tsx tests/gemini-test.ts",
     "worker": "tsx lib/rendering/render-worker.ts"
   },
   "dependencies": {

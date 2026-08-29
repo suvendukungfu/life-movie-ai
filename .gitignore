@@ -41,10 +41,12 @@ prisma/*.db-shm
 prisma/*.db-wal
 
 # Media Storage & Binary Assets
-.storage/
-storage/
-.data/
-scratch/
+/.storage/
+/storage/
+/.data/
+/scratch/
+!lib/storage/
+!app/api/storage/
 
 # Test & Coverage Outputs
 /coverage

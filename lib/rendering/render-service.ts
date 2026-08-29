@@ -254,33 +254,69 @@ export class RenderService {
       }
 
       // 4. MIXING AUDIO SOUNDTRACK & REAL VOICEOVER NARRATION
+      let styleMood = "nostalgia";
+      try {
+        if (project.styleJson) {
+          const parsed = JSON.parse(project.styleJson);
+          styleMood = parsed.id || parsed.name || "nostalgia";
+        }
+      } catch {}
+
       await this.updateJobState(
         jobId,
         "mixing_audio",
-        70,
-        "05 / SYNTHESIZING NARRATOR VOICE & MASTERING 48kHz SCORE",
-        ["Synthesizing spoken voiceover tracks", "Ducking soundtrack and mastering stereo audio"]
+        60,
+        "05 / SYNTHESIZING NARRATOR VOICE & HARMONIC CINEMA SCORE",
+        ["Composing multi-layered score", "Synthesizing spoken voiceover tracks"]
       );
 
       const totalDurationSec = plannedScenes.reduce((acc, sc) => acc + sc.durationSec, 0);
       const rawMusicPath = path.join(jobDir, "raw_music.aac");
-      await RenderAudioService.generateSoundtrack(totalDurationSec, rawMusicPath, "nostalgia");
+      await RenderAudioService.generateSoundtrack(totalDurationSec, rawMusicPath, styleMood);
 
       // Synthesize narrator voice clips for each scene
-      const voiceCues: Array<{ voiceClipPath: string; startTimeSec: number }> = [];
+      const voiceCues: Array<{ voiceClipPath: string; startTimeSec: number; durationSec?: number }> = [];
       let currentOffset = 0.5;
 
       for (let i = 0; i < plannedScenes.length; i++) {
         const sc = plannedScenes[i];
+        const stepProgress = Math.round(60 + ((i + 1) / plannedScenes.length) * 15);
+        await this.updateJobState(
+          jobId,
+          "mixing_audio",
+          stepProgress,
+          `05 / SYNTHESIZING NARRATOR VOICE (${i + 1}/${plannedScenes.length})`,
+          [`Synthesizing scene ${i + 1} narration`, `Timing offset: ${currentOffset.toFixed(1)}s`]
+        );
+
         if (sc.subtitle && sc.subtitle.trim().length > 0) {
           const voiceClipPath = path.join(jobDir, `voice_${i + 1}.aac`);
           try {
-            await activeVoiceProvider.synthesize(sc.subtitle, voiceClipPath);
+            await activeVoiceProvider.synthesize(sc.subtitle, voiceClipPath, styleMood);
             if (fs.existsSync(voiceClipPath)) {
+              const probe = await MediaProbe.probe(voiceClipPath);
               voiceCues.push({
                 voiceClipPath,
                 startTimeSec: currentOffset,
+                durationSec: probe.durationSec,
               });
+
+              // Persist audio asset record
+              try {
+                await prisma.audioAsset.create({
+                  data: {
+                    projectId: project.id,
+                    provider: process.env.GEMINI_API_KEY ? "gemini" : "system",
+                    model: process.env.GEMINI_API_KEY ? "gemini-2.0-flash" : "system-say",
+                    voice: styleMood,
+                    storageKey: `users/${project.userId}/projects/${project.id}/audio/voice_${i + 1}.aac`,
+                    mimeType: "audio/aac",
+                    durationSec: probe.durationSec,
+                    sampleRate: probe.audioSampleRate || 48000,
+                    channels: probe.audioChannels || 2,
+                  },
+                });
+              } catch {}
             }
           } catch (ttsErr) {
             console.warn(`Voice synthesis skipped for scene ${i + 1}:`, ttsErr);
@@ -289,7 +325,7 @@ export class RenderService {
         currentOffset += sc.durationSec;
       }
 
-      // Mix ambient music and voiceover with audio ducking
+      // Mix ambient music and voiceover with dynamic audio ducking and EBU R128 normalization
       const masterAudioPath = path.join(jobDir, "master_soundtrack.aac");
       await NarratorMixer.mixMasterSoundtrack(
         rawMusicPath,
